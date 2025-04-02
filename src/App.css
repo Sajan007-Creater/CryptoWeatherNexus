@@ -1,0 +1,180 @@
+/* High specificity rule to prevent ANY transitions when changing themes */
+html, body, *, *::before, *::after, #root, .app-wrapper, 
+.dark-mode, html.dark-mode, body.dark-mode, 
+#root.dark-mode, .app-wrapper.dark-mode,
+.dark-mode *, .dark-mode *::before, .dark-mode *::after {
+  transition: none !important;
+  animation: none !important;
+}
+
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+}
+
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+/* Marquee animation for live crypto ticker */
+.marquee-container {
+  width: 100%;
+  overflow: hidden;
+}
+
+.marquee {
+  display: inline-block;
+  white-space: nowrap;
+  animation: marquee 30s linear infinite;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+@media (prefers-reduced-motion) {
+  .marquee {
+    animation-duration: 60s;
+  }
+}
+
+/* Simple dark mode without animations or transitions */
+.dark-mode {
+  background-color: #000 !important;
+  color: #fff !important;
+}
+
+/* Force immediate change for dark mode backgrounds */
+html.dark-mode,
+body.dark-mode,
+#root.dark-mode,
+.app-wrapper.dark-mode {
+  background-color: #000 !important;
+}
+
+.dark-mode #root {
+  max-width: 100% !important;
+}
+
+/* Dark mode UI component styles */
+.dark-mode .glass {
+  background: rgba(20, 20, 30, 0.3) !important;
+  backdrop-filter: blur(16px) !important;
+  border-color: rgba(80, 80, 120, 0.3) !important;
+}
+
+.dark-mode .glass-card {
+  background: rgba(25, 25, 35, 0.5) !important;
+  backdrop-filter: blur(16px) !important;
+  border-color: rgba(80, 80, 100, 0.2) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
+}
+
+.dark-mode .card,
+.dark-mode div[class*="card"],
+.dark-mode div[class*="box"],
+.dark-mode div[class*="panel"] {
+  background-color: rgba(30, 30, 40, 0.4) !important;
+  border-color: rgba(80, 80, 120, 0.3) !important;
+  color: #f0f0ff !important;
+}
+
+.dark-mode nav {
+  background-color: rgba(10, 10, 15, 0.8) !important;
+}
+
+/* Dark mode form elements */
+.dark-mode input,
+.dark-mode select,
+.dark-mode textarea {
+  color: #f0f0ff !important;
+  background-color: rgba(30, 30, 40, 0.3) !important;
+  border-color: rgba(80, 80, 120, 0.3) !important;
+}
+
+.dark-mode input::placeholder {
+  color: rgba(200, 200, 255, 0.5) !important;
+}
+
+/* Dark mode links and buttons - use purple instead of yellow */
+.dark-mode a {
+  color: #8b5cf6 !important;
+}
+
+.dark-mode a:hover {
+  color: #a78bfa !important;
+}
+
+.dark-mode button:not([disabled]),
+.dark-mode .button:not([disabled]) {
+  background-color: rgba(124, 58, 237, 0.2) !important;
+  color: #d8b4fe !important;
+}
+
+.dark-mode button:hover:not([disabled]),
+.dark-mode .button:hover:not([disabled]) {
+  background-color: rgba(124, 58, 237, 0.3) !important;
+  color: #f5f3ff !important;
+}
+
+/* Dark mode image adjustments */
+.dark-mode .weather-background {
+  filter: brightness(0.7) contrast(1.2) !important;
+}
+
+.dark-mode img {
+  filter: brightness(0.9) contrast(1.1);
+}
+
+/* Ultra-simple theme toggle button */
+.theme-toggle {
+  position: relative;
+  cursor: pointer;
+  outline: none;
+  border: none;
+}
+
+/* Dark mode text effects */
+.dark-mode .text-gradient {
+  text-shadow: 0 0 20px rgba(139, 92, 246, 0.5) !important;
+}
