@@ -178,6 +178,27 @@ const getNewsImage = (item: any, seed: number) => {
   }
 };
 
+// Utility function to sort news items by date (most recent first)
+const sortNewsByDate = (news: NewsItem[]): NewsItem[] => {
+  return [...news].sort((a, b) => {
+    // Try to parse the dates
+    try {
+      const dateA = new Date(a.date).getTime();
+      const dateB = new Date(b.date).getTime();
+      
+      // If both dates are valid, sort by date (most recent first)
+      if (!isNaN(dateA) && !isNaN(dateB)) {
+        return dateB - dateA;
+      }
+    } catch (error) {
+      console.warn('Error sorting dates:', error);
+    }
+    
+    // If date parsing fails, keep original order
+    return 0;
+  });
+};
+
 export const fetchNews = async (limit: number = 5): Promise<NewsItem[]> => {
   try {
     // Using a proxy or CORS-anywhere service might help with CORS issues
@@ -191,17 +212,17 @@ export const fetchNews = async (limit: number = 5): Promise<NewsItem[]> => {
     
     if (!response.ok) {
       console.warn(`News API returned status: ${response.status}. Using fallback data.`);
-      return fallbackNewsData.slice(0, limit);
+      return sortNewsByDate(fallbackNewsData).slice(0, limit);
     }
     
     const data = await response.json();
     
     if (!data.results || !Array.isArray(data.results) || data.results.length === 0) {
       console.warn('News API returned empty or invalid results. Using fallback data.');
-      return fallbackNewsData.slice(0, limit);
+      return sortNewsByDate(fallbackNewsData).slice(0, limit);
     }
     
-    return data.results.map((item: any, index: number) => {
+    const newsItems = data.results.map((item: any, index: number) => {
       // Use source domain or title as seed for consistent images
       const imageId = Math.floor(Math.random() * 1000) + index;
       
@@ -216,10 +237,13 @@ export const fetchNews = async (limit: number = 5): Promise<NewsItem[]> => {
         image: getNewsImage(item, imageId)
       };
     });
+    
+    // Sort news items by date before returning
+    return sortNewsByDate(newsItems).slice(0, limit);
   } catch (error) {
     console.error('Failed to fetch news:', error);
     // Return fallback data in case of any error
-    return fallbackNewsData.slice(0, limit);
+    return sortNewsByDate(fallbackNewsData).slice(0, limit);
   }
 };
 
@@ -241,23 +265,25 @@ export const fetchNewsByCategory = async (category: string, limit: number = 10):
     
     if (!response.ok) {
       console.warn(`News by category API returned status: ${response.status}. Using fallback data.`);
-      return fallbackNewsData
+      const filteredNews = fallbackNewsData
         .filter(item => !category || category === 'All' || 
-          (item.tags && item.tags.some(tag => tag.toLowerCase().includes(category.toLowerCase()))))
-        .slice(0, limit);
+          (item.tags && item.tags.some(tag => tag.toLowerCase().includes(category.toLowerCase()))));
+      
+      return sortNewsByDate(filteredNews).slice(0, limit);
     }
     
     const data = await response.json();
     
     if (!data.results || !Array.isArray(data.results) || data.results.length === 0) {
       console.warn('News by category API returned empty results. Using fallback data.');
-      return fallbackNewsData
+      const filteredNews = fallbackNewsData
         .filter(item => !category || category === 'All' || 
-          (item.tags && item.tags.some(tag => tag.toLowerCase().includes(category.toLowerCase()))))
-        .slice(0, limit);
+          (item.tags && item.tags.some(tag => tag.toLowerCase().includes(category.toLowerCase()))));
+      
+      return sortNewsByDate(filteredNews).slice(0, limit);
     }
     
-    return data.results.map((item: any, index: number) => {
+    const newsItems = data.results.map((item: any, index: number) => {
       // Use consistent seed for each item
       const imageId = Math.floor(Math.random() * 1000) + index;
       
@@ -272,12 +298,16 @@ export const fetchNewsByCategory = async (category: string, limit: number = 10):
         image: getNewsImage(item, imageId)
       };
     });
+    
+    // Sort news items by date before returning
+    return sortNewsByDate(newsItems).slice(0, limit);
   } catch (error) {
     console.error('Failed to fetch news by category:', error);
     // Return filtered fallback data in case of any error
-    return fallbackNewsData
+    const filteredNews = fallbackNewsData
       .filter(item => !category || category === 'All' || 
-        (item.tags && item.tags.some(tag => tag.toLowerCase().includes(category.toLowerCase()))))
-      .slice(0, limit);
+        (item.tags && item.tags.some(tag => tag.toLowerCase().includes(category.toLowerCase()))));
+    
+    return sortNewsByDate(filteredNews).slice(0, limit);
   }
 };

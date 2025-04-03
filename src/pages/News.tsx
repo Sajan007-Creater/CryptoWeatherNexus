@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import NavBar from '../components/NavBar';
 import NewsCard from '../components/NewsCard';
-import { Search } from 'lucide-react';
+import { Search, RefreshCcw } from 'lucide-react';
 import { fetchNews, fetchNewsByCategory, NewsItem } from '../utils/newsApi';
 import { toast } from '@/components/ui/use-toast';
 
@@ -11,38 +11,80 @@ const NewsPage = () => {
   const [allNews, setAllNews] = useState<NewsItem[]>([]);
   const [allTags, setAllTags] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   
-  // Fetch news data
-  useEffect(() => {
-    const fetchNewsData = async () => {
+  // Utility function to sort news by date
+  const sortNewsByDate = (newsItems: NewsItem[]): NewsItem[] => {
+    return [...newsItems].sort((a, b) => {
       try {
-        setLoading(true);
-        let newsData: NewsItem[];
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
         
-        if (activeTag) {
-          newsData = await fetchNewsByCategory(activeTag);
-        } else {
-          newsData = await fetchNews(10);
-        }
+        if (isNaN(dateA) || isNaN(dateB)) return 0;
         
-        setAllNews(newsData);
-        
-        // Extract unique tags from all news articles
-        const tags = Array.from(new Set(newsData.flatMap(news => news.tags || [])));
-        setAllTags(tags);
+        return dateB - dateA; // Most recent first
       } catch (error) {
-        console.error('Error fetching news:', error);
-        toast({
-          title: "News data error",
-          description: "Failed to fetch news data",
-          variant: "destructive"
-        });
-      } finally {
-        setLoading(false);
+        console.warn('Error sorting dates:', error);
+        return 0;
       }
-    };
-
+    });
+  };
+  
+  // Function to fetch news data
+  const fetchNewsData = async () => {
+    try {
+      setLoading(true);
+      let newsData: NewsItem[];
+      
+      if (activeTag) {
+        newsData = await fetchNewsByCategory(activeTag, 10); // Get top 10 news items by category
+      } else {
+        newsData = await fetchNews(10); // Get top 10 news items
+      }
+      
+      // Double-check that news is sorted by date (most recent first)
+      // Even though our API utils should already sort, we ensure it here
+      const sortedNewsData = sortNewsByDate(newsData);
+      setAllNews(sortedNewsData);
+      
+      // Extract unique tags from all news articles
+      const tags = Array.from(new Set(sortedNewsData.flatMap(news => news.tags || [])));
+      setAllTags(tags);
+      
+      // Update last refreshed timestamp
+      setLastUpdated(new Date());
+    } catch (error) {
+      console.error('Error fetching news:', error);
+      toast({
+        title: "News data error",
+        description: "Failed to fetch news data",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+  
+  // Handle manual refresh
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchNewsData();
+  };
+  
+  // Fetch news data when component mounts or tag changes
+  useEffect(() => {
+    // Initial fetch
     fetchNewsData();
+    
+    // Set up daily refresh for news (86400000 ms = 24 hours)
+    const newsRefreshInterval = setInterval(fetchNewsData, 86400000);
+    
+    // Clean up interval on component unmount
+    return () => {
+      clearInterval(newsRefreshInterval);
+    };
   }, [activeTag]);
   
   const handleTagClick = async (tag: string | null) => {
@@ -56,12 +98,38 @@ const NewsPage = () => {
       news.source.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
+  // Format last updated time
+  const formatLastUpdated = () => {
+    const options: Intl.DateTimeFormatOptions = {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    };
+    return lastUpdated.toLocaleDateString('en-US', options);
+  };
+
   return (
     <div className="min-h-screen">
       <NavBar />
       
       <main className="container mx-auto pt-24 pb-12 px-4">
-        <h1 className="text-4xl font-bold text-gradient text-shadow-lg bg-white/20 px-6 py-3 rounded-xl backdrop-blur-sm mb-8">Crypto News</h1>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+          <h1 className="text-4xl font-bold text-gradient text-shadow-lg bg-white/20 px-6 py-3 rounded-xl backdrop-blur-sm">Crypto News</h1>
+          
+          <div className="flex items-center mt-4 md:mt-0">
+            <span className="text-sm text-gray-500 mr-3">Last updated: {formatLastUpdated()}</span>
+            <button 
+              onClick={handleRefresh}
+              disabled={loading || refreshing}
+              className="flex items-center gap-2 px-3 py-2 rounded-md bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCcw size={16} className={refreshing ? "animate-spin" : ""} />
+              <span>{refreshing ? "Refreshing..." : "Refresh"}</span>
+            </button>
+          </div>
+        </div>
         
         {/* Search */}
         <div className="mb-6">

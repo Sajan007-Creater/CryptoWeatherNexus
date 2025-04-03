@@ -1,5 +1,5 @@
 import { ExternalLink } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface NewsCardProps {
   title: string;
@@ -19,6 +19,12 @@ const NewsCard = ({
   className = '',
 }: NewsCardProps) => {
   const [imageError, setImageError] = useState(false);
+  const [formattedDate, setFormattedDate] = useState<string>('');
+  
+  useEffect(() => {
+    // Format the date when the component mounts or when date prop changes
+    setFormattedDate(formatDate(date));
+  }, [date]);
   
   const formatDate = (dateString: string) => {
     const options: Intl.DateTimeFormatOptions = {
@@ -26,10 +32,30 @@ const NewsCard = ({
       day: 'numeric',
       year: 'numeric',
     };
+    
     try {
-      return new Date(dateString).toLocaleDateString('en-US', options);
+      // Try to parse the date string
+      const dateObj = new Date(dateString);
+      
+      // Check if the date is valid
+      if (!isNaN(dateObj.getTime())) {
+        return dateObj.toLocaleDateString('en-US', options);
+      }
+      
+      // Try parsing without timezone
+      if (dateString.includes('T')) {
+        const datePart = dateString.split('T')[0];
+        const parsedDate = new Date(datePart);
+        if (!isNaN(parsedDate.getTime())) {
+          return parsedDate.toLocaleDateString('en-US', options);
+        }
+      }
+      
+      // Return original string if parsing fails
+      return dateString;
     } catch (error) {
-      return dateString; // Return original string if date parsing fails
+      console.warn('Error formatting date:', dateString, error);
+      return dateString;
     }
   };
 
@@ -130,6 +156,7 @@ const NewsCard = ({
                 alt={title} 
                 className="w-full h-full object-cover"
                 onError={handleImageError}
+                loading="lazy"
               />
             </div>
           ) : (
@@ -139,6 +166,7 @@ const NewsCard = ({
                 alt={source}
                 className={`w-full h-full ${['DeFi Pulse', 'NFT Insider', 'Bloomberg Crypto'].includes(source) ? 'object-contain p-4 bg-white dark-mode:bg-gray-800' : 'object-cover'}`}
                 onError={handleSecondaryImageError}
+                loading="lazy"
               />
             </div>
           )}
@@ -149,7 +177,7 @@ const NewsCard = ({
             <div className="mt-auto flex justify-between items-center text-sm">
               <p className="text-gray-600 dark-mode:text-gray-300">{source}</p>
               <div className="flex items-center gap-1 text-primary-foreground">
-                <span>{formatDate(date)}</span>
+                <span>{formattedDate}</span>
                 <ExternalLink size={14} />
               </div>
             </div>

@@ -7,7 +7,7 @@ import NewsCard from '../components/NewsCard';
 import ChanceOfRain from '../components/ChanceOfRain';
 import ForecastCard from '../components/ForecastCard';
 import { toast } from '@/components/ui/use-toast';
-import { CloudSun, CloudRain, CloudSnow, Wind, Moon, Sun } from 'lucide-react';
+import { CloudSun, CloudRain, CloudSnow, Wind, Moon, Sun, RefreshCw } from 'lucide-react';
 import { 
   fetchCurrentWeather, 
   fetchWeatherForecast, 
@@ -647,8 +647,20 @@ const Dashboard = () => {
     const fetchNewsData = async () => {
       try {
         setNewsLoading(true);
-        const data = await fetchNews(5); // Get top 5 news items
-        setNewsData(data);
+        const data = await fetchNews(5); // Get top 5 news items for dashboard
+        
+        // Ensure news is sorted by date (most recent first)
+        const sortedData = [...data].sort((a, b) => {
+          try {
+            const dateA = new Date(a.date).getTime();
+            const dateB = new Date(b.date).getTime();
+            return dateB - dateA; // Most recent first
+          } catch (error) {
+            return 0;
+          }
+        });
+        
+        setNewsData(sortedData);
       } catch (error) {
         console.error('Error fetching news data:', error);
         toast({
@@ -661,8 +673,53 @@ const Dashboard = () => {
       }
     };
 
+    // Initial fetch
     fetchNewsData();
+    
+    // Set up daily refresh for news (86400000 ms = 24 hours)
+    const newsRefreshInterval = setInterval(fetchNewsData, 86400000);
+    
+    // Clean up interval on component unmount
+    return () => {
+      clearInterval(newsRefreshInterval);
+    };
   }, []);
+
+  // Function to manually refresh news data
+  const refreshNews = async () => {
+    try {
+      setNewsLoading(true);
+      const data = await fetchNews(5); // Get top 5 news items for dashboard
+      
+      // Ensure news is sorted by date (most recent first)
+      const sortedData = [...data].sort((a, b) => {
+        try {
+          const dateA = new Date(a.date).getTime();
+          const dateB = new Date(b.date).getTime();
+          return dateB - dateA; // Most recent first
+        } catch (error) {
+          return 0;
+        }
+      });
+      
+      setNewsData(sortedData);
+      
+      // Show success toast
+      toast({
+        title: "Updated",
+        description: "Latest news refreshed",
+      });
+    } catch (error) {
+      console.error('Error refreshing news data:', error);
+      toast({
+        title: "News data error",
+        description: "Failed to refresh news data",
+        variant: "destructive"
+      });
+    } finally {
+      setNewsLoading(false);
+    }
+  };
 
   const fetchDefaultLocationData = async (city: string) => {
     try {
@@ -1230,7 +1287,18 @@ const Dashboard = () => {
         <section>
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold">Latest News</h2>
-            <Link to="/news" className="text-primary-foreground hover:underline">View all</Link>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={refreshNews}
+                disabled={newsLoading}
+                className="flex items-center gap-2 px-3 py-1 rounded-md bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Refresh news"
+              >
+                <RefreshCw size={16} className={newsLoading ? "animate-spin" : ""} />
+                <span className="text-sm">Refresh</span>
+              </button>
+              <Link to="/news" className="text-primary-foreground hover:underline">View all</Link>
+            </div>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
@@ -1252,7 +1320,7 @@ const Dashboard = () => {
             ) : newsData.length > 0 ? (
               newsData.map((news, index) => (
                 <NewsCard
-                  key={index}
+                  key={news.id || index}
                   title={news.title}
                   source={news.source}
                   date={news.date}
