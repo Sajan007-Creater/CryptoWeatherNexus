@@ -16,18 +16,18 @@ The following API keys are required for the application to function properly:
 
 | API | Environment Variable | Purpose |
 |-----|---------------------|---------|
-| Weather API | `VITE_WEATHER_API_KEY` | Access to weather data and forecasts |
-| Crypto API | `VITE_CRYPTO_API_KEY` | Cryptocurrency price data and market information |
-| News API | `VITE_NEWS_API_KEY` | Fetching crypto and financial news |
+| WeatherAPI.com | `VITE_WEATHER_API_KEY` | Access to weather data and forecasts |
+| CryptoCompare | `VITE_CRYPTO_API_KEY` | Cryptocurrency price data and market information |
+| CryptoPanic | `VITE_NEWS_API_KEY` | Fetching crypto and financial news |
 
 ## Setting Up Environment Variables
 
 1. Create a `.env` file in the root directory of the project
 2. Add your API keys in the following format:
    ```
-   VITE_WEATHER_API_KEY=your_weather_api_key
-   VITE_CRYPTO_API_KEY=your_crypto_api_key
-   VITE_NEWS_API_KEY=your_news_api_key
+   VITE_WEATHER_API_KEY=your_weatherapi_key
+   VITE_CRYPTO_API_KEY=your_cryptocompare_key
+   VITE_NEWS_API_KEY=your_cryptopanic_key
    ```
 3. Restart the development server for the changes to take effect
 
