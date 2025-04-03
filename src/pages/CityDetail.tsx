@@ -80,7 +80,7 @@ const generateHourlyData = (baseTemp: number) => {
 };
 
 const CityDetail = () => {
-  const { cityName } = useParams<{ cityName: string }>();
+  const { cityId } = useParams<{ cityId: string }>();
   const [loading, setLoading] = useState(true);
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [forecastData, setForecastData] = useState<any[]>([]);
@@ -92,7 +92,7 @@ const CityDetail = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!cityName) {
+      if (!cityId) {
         setError("City name not provided");
         setLoading(false);
         return;
@@ -102,10 +102,10 @@ const CityDetail = () => {
         setLoading(true);
         setError(null);
 
-        const weather = await fetchCurrentWeather(cityName);
+        const weather = await fetchCurrentWeather(cityId);
         setWeatherData(weather);
 
-        const forecast = await fetchWeatherForecast(cityName);
+        const forecast = await fetchWeatherForecast(cityId);
         setForecastData(forecast.forecast);
         setRainData(forecast.hourlyRain);
         setCityImage(forecast.cityImage || weather.image);
@@ -126,7 +126,7 @@ const CityDetail = () => {
     };
 
     fetchData();
-  }, [cityName]);
+  }, [cityId]);
 
   if (error) {
     return (
